@@ -65,11 +65,43 @@ class Visualizer:
         ax.set_title("Fréquences des mots communs")
         plt.close(fig)
         return fig
+    
+    def show_common_words_list(self, original_text, cleaned_text, top_n=20):
+        original_freq = Counter(original_text.split()).most_common(top_n)
+        cleaned_freq = Counter(cleaned_text.split()).most_common(top_n)
+
+        # Création de DataFrames pour affichage facile
+        df_original = pd.DataFrame(original_freq, columns=['Mot', 'Fréquence'])
+        df_cleaned = pd.DataFrame(cleaned_freq, columns=['Mot', 'Fréquence'])
+
+        print("Mots les plus fréquents dans le texte original :")
+        print(df_original)
+
+        print("\nMots les plus fréquents dans le texte nettoyé :")
+        print(df_cleaned)
+
+        # Optionnel: afficher sous forme graphique avec seaborn ou matplotlib
+        fig, axs = plt.subplots(1, 2, figsize=(14, 6))
+
+        sns.barplot(data=df_original, x='Fréquence', y='Mot', ax=axs[0], palette='Blues_d')
+        axs[0].set_title("Texte original - Top mots")
+        axs[0].invert_yaxis()
+
+        sns.barplot(data=df_cleaned, x='Fréquence', y='Mot', ax=axs[1], palette='Oranges_d')
+        axs[1].set_title("Texte nettoyé - Top mots")
+        axs[1].invert_yaxis()
+
+        plt.close(fig)  # Important pour ne pas afficher hors Streamlit
+        return fig
 
     def display_analysis(self, original_text, cleaned_text, title=""):
         figs = []
         figs.append(self.plot_lengths(original_text, cleaned_text, title))
         figs.append(self.show_wordclouds(original_text, cleaned_text))
+        words_list = self.show_common_words_list(original_text, cleaned_text)
+        if words_list is not None:
+            figs.append(words_list)
+
         heatmap_fig = self.show_common_words_heatmap(original_text, cleaned_text)
         if heatmap_fig is not None:
             figs.append(heatmap_fig)
