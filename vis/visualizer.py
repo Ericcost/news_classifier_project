@@ -9,6 +9,7 @@ class Visualizer:
         pass
 
     def check_cleaned_text_column(self, df):
+        # Utile pour debug
         print(df.columns)
         return 'cleaned_text' in df.columns
 
@@ -18,11 +19,12 @@ class Visualizer:
         lengths = [original_len, cleaned_len]
         labels = ['Avant', 'Après']
 
-        plt.figure(figsize=(5, 4))
-        plt.bar(labels, lengths, color=['skyblue', 'orange'])
-        plt.ylabel("Nombre de mots")
-        plt.title(f"Longueur du texte - {title}")
-        plt.show()
+        fig, ax = plt.subplots(figsize=(5, 4))
+        ax.bar(labels, lengths, color=['skyblue', 'orange'])
+        ax.set_ylabel("Nombre de mots")
+        ax.set_title(f"Longueur du texte - {title}")
+        plt.close(fig)  # Important pour ne pas afficher hors Streamlit
+        return fig
 
     def show_wordclouds(self, original_text, cleaned_text):
         fig, axs = plt.subplots(1, 2, figsize=(12, 5))
@@ -38,7 +40,8 @@ class Visualizer:
         axs[1].set_title("Après prétraitement")
 
         plt.tight_layout()
-        plt.show()
+        plt.close(fig)
+        return fig
 
     def show_common_words_heatmap(self, original_text, cleaned_text):
         original_freq = Counter(original_text.split()).most_common(20)
@@ -50,22 +53,27 @@ class Visualizer:
             count_before = dict(original_freq).get(w, 0)
             count_after = dict(cleaned_freq).get(w, 0)
             data.append({'word': w, 'Avant': count_before, 'Après': count_after})
-        
+
         if not data:
             print("⚠️ Aucun mot commun significatif pour heatmap.")
-            return
+            return None
 
         df_freq = pd.DataFrame(data).set_index('word')
 
-        plt.figure(figsize=(8, 6))
-        sns.heatmap(df_freq, annot=True, cmap='YlGnBu')
-        plt.title("Fréquences des mots communs")
-        plt.show()
+        fig, ax = plt.subplots(figsize=(8, 6))
+        sns.heatmap(df_freq, annot=True, cmap='YlGnBu', ax=ax)
+        ax.set_title("Fréquences des mots communs")
+        plt.close(fig)
+        return fig
 
     def display_analysis(self, original_text, cleaned_text, title=""):
-        self.plot_lengths(original_text, cleaned_text, title)
-        self.show_wordclouds(original_text, cleaned_text)
-        self.show_common_words_heatmap(original_text, cleaned_text)
+        figs = []
+        figs.append(self.plot_lengths(original_text, cleaned_text, title))
+        figs.append(self.show_wordclouds(original_text, cleaned_text))
+        heatmap_fig = self.show_common_words_heatmap(original_text, cleaned_text)
+        if heatmap_fig is not None:
+            figs.append(heatmap_fig)
+        return figs
 
     def analyze_file(self, filepath):
         try:
@@ -80,4 +88,6 @@ class Visualizer:
 
         for i, row in df.iterrows():
             print(f"\n=== Article index {i} - Section: {row.get('section', 'N/A')} ===")
-            self.display_analysis(row['text'], row['cleaned_text'], title=f"Article {i}")
+            figs = self.display_analysis(row['text'], row['cleaned_text'], title=f"Article {i}")
+            for fig in figs:
+                fig.show()  # Ou autre selon usage local
