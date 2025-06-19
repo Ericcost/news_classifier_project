@@ -30,7 +30,7 @@ print(df['clean_text'].notnull().sum())
 from IPython.display import display
 
 # Filtrer uniquement les lignes où le prétraitement a été appliqué
-df_subset = df[df['clean_text'].notnull()][['section', 'text', 'clean_text']]
+df_subset = df[df['clean_text'].notnull()][['section', 'title' ,'text', 'clean_text']]
 pd.set_option('display.max_colwidth', 200)
 
 display(df_subset)
