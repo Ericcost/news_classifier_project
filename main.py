@@ -1,47 +1,69 @@
-# Importation des modules nécessaires
 import os
 import pandas as pd
-from config.settings import OUTPUT_CSV  # Chemin du fichier CSV de sortie défini dans la config
-from nlp.preprocessing import Preprocessing  # Classe de prétraitement du texte
-from data_extraction.manager import load_or_fetch_articles  # Fonction d'extraction des articles
+from nlp.preprocessing import Preprocessing
+from vis.visualizer import Visualizer
+from nlp.test_preprocessor import run_test
+from data_extraction.manager import load_or_fetch_articles
 
-def run_preprocessing():
-    # Vérifie si le fichier CSV d'articles existe
-    if not os.path.exists(OUTPUT_CSV):
-        print(f"❌ Le fichier {OUTPUT_CSV} est introuvable. Lance d'abord l'extraction.")
+DEFAULT_FILENAME = "data/articles.csv"
+
+def ask_for_filename(prompt="Nom du fichier CSV (par défaut: data/articles.csv): "):
+    filename = input(prompt).strip()
+    return filename if filename else DEFAULT_FILENAME
+
+def run_preprocessing(filename):
+    # Force le chemin vers le dossier ./data
+    base_name = os.path.basename(filename)  # récupère juste le nom du fichier
+    full_path = os.path.join("data", base_name)
+
+    if not os.path.exists(full_path):
+        print(f"❌ Le fichier {full_path} est introuvable. Lance d'abord l'extraction.")
         return
-    
-    # Charge les données depuis le CSV
-    df = pd.read_csv(OUTPUT_CSV)
-    preprocessor = Preprocessing()  # Initialise le préprocesseur
-    # Applique le prétraitement à la colonne 'text'
+
+    df = pd.read_csv(full_path)
+    preprocessor = Preprocessing()
     df['cleaned_text'] = df['text'].apply(preprocessor.preprocess)
-    
-    # Sauvegarde le résultat dans un nouveau fichier CSV
-    output_cleaned = OUTPUT_CSV.replace(".csv", "_cleaned.csv")
+
+    output_cleaned = full_path.replace(".csv", "_cleaned.csv")
     df.to_csv(output_cleaned, index=False)
     print(f"✅ Texte prétraité sauvegardé dans {output_cleaned}")
 
+
 def menu():
-    # Affiche le menu principal et récupère le choix de l'utilisateur
-    print("Quelle étape veux-tu lancer ?")
-    print("1 - Extraction des données (API Guardian)")
-    print("2 - Prétraitement du texte")
-    print("3 - Quitter")
-    return input("Ton choix (1/2/3) : ").strip()
+    print("\n=== Menu ===")
+    print("1 - Extraire les données (API Guardian)")
+    print("2 - Prétraiter un fichier CSV")
+    print("3 - Tester le prétraitement sur un exemple")
+    print("4 - Visualiser des articles")
+    print("5 - Quitter")
+    return input("Ton choix (1-5) : ").strip()
 
 def main():
-    # Fonction principale qui gère le menu et les actions
     choice = menu()
-    
+
     if choice == "1":
-        load_or_fetch_articles()  # Lance l'extraction des articles
+        filename = ask_for_filename("Nom du fichier de sortie : ")
+        load_or_fetch_articles(filename)
+
     elif choice == "2":
-        run_preprocessing()  # Lance le prétraitement du texte
+        filename = ask_for_filename("Nom du fichier à prétraiter : ")
+        run_preprocessing(filename)
+
     elif choice == "3":
-        print("👋 Fin du script.")  # Quitte le programme
+        run_test()
+
+    elif choice == "4":
+        filename = ask_for_filename("Nom du fichier nettoyé à visualiser : ")
+        base_name = os.path.basename(filename)  # récupère juste le nom du fichier
+        full_path = os.path.join("data", base_name)
+        visualizer = Visualizer()
+        visualizer.analyze_file(full_path)
+
+    elif choice == "5":
+        print("👋 Fin du programme.")
+
     else:
-        print("❌ Choix invalide. Réessaie.")  # Gère les choix invalides
+        print("❌ Choix invalide.")
 
 if __name__ == "__main__":
-    main()  # Point d'entrée du script
+    main()
