@@ -22,14 +22,12 @@ class BERTSemanticAnalyzer:
         outputs = self.model(**inputs)
         embeddings = outputs.last_hidden_state.squeeze(0)  # (seq_len, hidden_dim)
 
-        # Trouver les indices des tokens correspondant au target_word
         target_word = target_word.lower()
         matched_indices = [i for i, token in enumerate(tokens) if target_word in token.lower()]
 
         if not matched_indices:
             return None
-        
-        # Moyenne des embeddings des sous-tokens correspondant
+
         selected_embeddings = embeddings[matched_indices, :]
         mean_embedding = selected_embeddings.mean(dim=0)
         return mean_embedding.detach().numpy()
@@ -43,6 +41,18 @@ class BERTSemanticAnalyzer:
                 embeddings.append(emb)
             all_embeddings[word] = embeddings
         return all_embeddings
+
+    def save_embeddings_to_csv(self, all_embeddings, filename="../data/embeddings.csv"):
+        rows = []
+        for word, embs in all_embeddings.items():
+            for i, emb in enumerate(embs):
+                if emb is not None:
+                    row = {"word": word, "doc_index": i}
+                    for j, val in enumerate(emb):
+                        row[f"dim_{j}"] = val
+                    rows.append(row)
+        df = pd.DataFrame(rows)
+        df.to_csv(filename, index=False)
 
     def compute_pairwise_similarities(self, all_embeddings):
         rows = []

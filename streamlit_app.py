@@ -118,16 +118,32 @@ elif menu == "Analyse sémantique BERT":
         else:
             target_words_input = st.text_input(
                 "Mots cibles (séparés par des virgules)",
-                value="rugby,report,maker,trade,two"
+                value="rugby,report,maker,trade,two,cut,bank,iran,attack,government,carnival,wallaby,garmin,watch,strike"
             )
             target_words = [w.strip() for w in target_words_input.split(",") if w.strip()]
+
+            # Input pour le nom du fichier CSV à générer
+            embeddings_filename = st.text_input("Nom du fichier CSV pour sauvegarder les embeddings", value="data/subset_articles3_embeddings.csv")
             
             if st.button("Calculer embeddings et similarités"):
                 with st.spinner("Chargement du modèle BERT et calcul des embeddings..."):
                     bert = BERTSemanticAnalyzer()
                     all_embeddings = bert.compute_embeddings(df["cleaned_text"].tolist(), target_words)
                     
-                    st.success("✅ Embeddings calculés.")
+                    # Sauvegarder dans un fichier CSV local (serveur Streamlit)
+                    bert.save_embeddings_to_csv(all_embeddings, filename=embeddings_filename)
+
+                    st.success("✅ Embeddings calculés et sauvegardés dans :" + embeddings_filename)
+
+                    # Optionnel : proposer un téléchargement du fichier CSV dans l'interface
+                    with open(embeddings_filename, "rb") as f:
+                        st.download_button(
+                            label="Télécharger les embeddings CSV",
+                            data=f,
+                            file_name=embeddings_filename,
+                            mime="text/csv"
+                        )
+
                     st.info("Calcul des similarités entre mots et articles...")
                     df_sim = bert.compute_pairwise_similarities(all_embeddings)
                     st.dataframe(df_sim)
