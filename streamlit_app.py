@@ -41,7 +41,7 @@ elif menu == "Extraire les données":
 
 elif menu == "Prétraiter les données":
     st.subheader("Prétraitement des données")
-    filename = ask_for_filename("data/subset_articles3.csv")
+    filename = ask_for_filename("data/subset_articles.csv")
     if st.button("Lancer le prétraitement"):
         if not os.path.exists(filename):
             st.error(f"❌ Le fichier {filename} est introuvable. Lance d'abord l'extraction.")
@@ -65,7 +65,7 @@ elif menu == "Tester le prétraitement":
 
 elif menu == "Visualisation des articles":
     st.subheader("Visualisation des articles Avant/Après prétraitement")
-    filename = ask_for_filename("data/subset_articles3_cleaned.csv")
+    filename = ask_for_filename("data/subset_articles_cleaned.csv")
 
     if not os.path.exists(filename):
         st.error(f"❌ Le fichier {filename} est introuvable. Veuillez prétraiter d'abord.")
@@ -108,7 +108,7 @@ elif menu == "Visualisation des articles":
 elif menu == "Analyse sémantique BERT":
     st.subheader("Analyse sémantique avec BERT")
 
-    filename = ask_for_filename("data/subset_articles3_cleaned.csv")
+    filename = ask_for_filename("data/subset_articles_cleaned.csv")
     if not os.path.exists(filename):
         st.error(f"❌ Le fichier {filename} est introuvable. Veuillez prétraiter d'abord.")
     else:
@@ -123,7 +123,7 @@ elif menu == "Analyse sémantique BERT":
             target_words = [w.strip() for w in target_words_input.split(",") if w.strip()]
 
             # Input pour le nom du fichier CSV à générer
-            embeddings_filename = st.text_input("Nom du fichier CSV pour sauvegarder les embeddings", value="data/subset_articles3_embeddings.csv")
+            # embeddings_filename = st.text_input("Nom du fichier CSV pour sauvegarder les embeddings", value="data/subset_articles_embeddings.csv")
             
             if st.button("Calculer embeddings et similarités"):
                 with st.spinner("Chargement du modèle BERT et calcul des embeddings..."):
@@ -131,18 +131,18 @@ elif menu == "Analyse sémantique BERT":
                     all_embeddings = bert.compute_embeddings(df["cleaned_text"].tolist(), target_words)
                     
                     # Sauvegarder dans un fichier CSV local (serveur Streamlit)
-                    bert.save_embeddings_to_csv(all_embeddings, filename=embeddings_filename)
+                    # bert.save_embeddings_to_csv(all_embeddings, filename=embeddings_filename)
 
-                    st.success("✅ Embeddings calculés et sauvegardés dans :" + embeddings_filename)
+                    #st.success("✅ Embeddings calculés et sauvegardés dans :" + embeddings_filename)
 
                     # Optionnel : proposer un téléchargement du fichier CSV dans l'interface
-                    with open(embeddings_filename, "rb") as f:
-                        st.download_button(
-                            label="Télécharger les embeddings CSV",
-                            data=f,
-                            file_name=embeddings_filename,
-                            mime="text/csv"
-                        )
+                    # with open(embeddings_filename, "rb") as f:
+                    #     st.download_button(
+                    #         label="Télécharger les embeddings CSV",
+                    #         data=f,
+                    #         file_name=embeddings_filename,
+                    #         mime="text/csv"
+                    #     )
 
                     st.info("Calcul des similarités entre mots et articles...")
                     df_sim = bert.compute_pairwise_similarities(all_embeddings)
